@@ -22,6 +22,8 @@ func BookHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "book ID: ", id)
 	case http.MethodPut:
 		updateBook(w, r, id)
+	case http.MethodDelete:
+		deleteBook(w, r, id)
 	}
 }
 
@@ -44,4 +46,8 @@ func createBook(w http.ResponseWriter, r *http.Request) {
 
 func updateBook(w http.ResponseWriter, r *http.Request, id string) {
 	fmt.Fprintln(w, "UPDATED book ID: ", id)
+}
+
+func deleteBook(w http.ResponseWriter, r *http.Request, id string) {
+	fmt.Fprintln(w, "DELETED book ID: ", id)
 }
