@@ -3,6 +3,8 @@ package main
 import (
 	h "library-management-api/handler"
 	"net/http"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {

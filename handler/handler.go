@@ -19,7 +19,7 @@ func BookHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		fmt.Fprintln(w, "book ID: ", id)
+		getBook(w, r, id)
 	case http.MethodPut:
 		updateBook(w, r, id)
 	case http.MethodDelete:
@@ -30,14 +30,18 @@ func BookHandler(w http.ResponseWriter, r *http.Request) {
 func BooksHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		getBooks(w, r)
+		getRecommendedBooks(w, r)
 	case http.MethodPost:
 		createBook(w, r)
 	}
 }
 
-func getBooks(w http.ResponseWriter, r *http.Request) {
+func getRecommendedBooks(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "list of books")
+}
+
+func getBook(w http.ResponseWriter, r *http.Request, id string) {
+	fmt.Fprintln(w, "book ID: ", id)
 }
 
 func createBook(w http.ResponseWriter, r *http.Request) {
