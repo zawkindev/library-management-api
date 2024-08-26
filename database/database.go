@@ -9,7 +9,7 @@ var DB *sql.DB
 
 func ConnectDB() {
 	var err error
-	DB, err = sql.Open("postgres", "user=postgres password=m dbname=library sslmodule=require")
+	DB, err = sql.Open("postgres", "user=postgres password=m dbname=library sslmode=require")
 	if err != nil {
 		log.Fatal("Unable to connect to the database: ", err)
 	}
