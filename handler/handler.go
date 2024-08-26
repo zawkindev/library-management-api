@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
+	"library-management-api/database"
+	"library-management-api/model"
 	"net/http"
 )
 
@@ -30,14 +33,30 @@ func BookHandler(w http.ResponseWriter, r *http.Request) {
 func BooksHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		getRecommendedBooks(w, r)
+		getBooks(w, r)
 	case http.MethodPost:
 		createBook(w, r)
 	}
 }
 
-func getRecommendedBooks(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "list of books")
+func getBooks(w http.ResponseWriter, r *http.Request) {
+	rows, err := database.DB.Query("SELECT id, title, author, year, genre, isbn FROM books")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var books []model.Book
+	for rows.Next() {
+		var book model.Book
+		err = rows.Scan(&book.ID, &book.Title, &book.Author, &book.Year, &book.Genre, &book.ISBN)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		books = append(books, book)
+	}
+	json.NewEncoder(w).Encode(books)
 }
 
 func getBook(w http.ResponseWriter, r *http.Request, id string) {

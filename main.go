@@ -1,6 +1,7 @@
 package main
 
 import (
+	"library-management-api/database"
 	h "library-management-api/handler"
 	"net/http"
 
@@ -8,6 +9,9 @@ import (
 )
 
 func main() {
+	database.ConnectDB()
+	defer database.DB.Close()
+
 	mainMux := http.NewServeMux()
 
 	booksMux := http.NewServeMux()
