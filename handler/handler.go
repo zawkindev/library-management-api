@@ -1,13 +1,14 @@
 package handler
 
 import (
-	"crypto/md5"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io"
 	"library-management-api/database"
 	"library-management-api/model"
 	"net/http"
+
+	"gorm.io/gorm"
 )
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
@@ -81,17 +82,54 @@ func createBook(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateBook(w http.ResponseWriter, r *http.Request, id string) {
-	fmt.Fprintln(w, "UPDATED book ID: ", id)
+	var book model.Book
+
+	// Find the book by ID first
+	if err := database.DB.First(&book, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			http.Error(w, "Book not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Decode the JSON request body into the book struct (this will overwrite the book fields)
+	if err := json.NewDecoder(r.Body).Decode(&book); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Update the book record with the new data
+	if err := database.DB.Save(&book).Error; err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with the updated book
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(book)
 }
 
 func deleteBook(w http.ResponseWriter, r *http.Request, id string) {
-	fmt.Fprintln(w, "DELETED book ID: ", id)
-}
+	var book model.Book
 
-func strToHash(input string) string {
-	hash := md5.New()
-	io.WriteString(hash, input)
-	hashBytes := hash.Sum(nil)
+	// Find the book by ID first to ensure it exists
+	if err := database.DB.First(&book, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			http.Error(w, "Book not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	return fmt.Sprintf("%x", hashBytes)
+	// Delete the book from the database
+	if err := database.DB.Delete(&book).Error; err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with a 204 No Content status to indicate successful deletion
+	w.WriteHeader(http.StatusNoContent)
 }
