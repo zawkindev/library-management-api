@@ -41,33 +41,25 @@ func BooksHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getBooks(w http.ResponseWriter, r *http.Request) {
-	rows, err := database.DB.Query("SELECT id, title, author, year, genre, isbn FROM books")
-	if err != nil {
+	var books []model.Book
+
+	if err := database.DB.Find(&books).Error; err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	var books []model.Book
-	for rows.Next() {
-		var book model.Book
-		err = rows.Scan(&book.ID, &book.Title, &book.Author, &book.Year, &book.Genre, &book.ISBN)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		books = append(books, book)
-	}
 	json.NewEncoder(w).Encode(books)
+
 }
 
 func getBook(w http.ResponseWriter, r *http.Request, id string) {
 	var book model.Book
-	query := "SELECT id, title, author, year, genre, isbn FROM books WHERE id=$1"
-	err := database.DB.QueryRow(query, id).Scan(&book.ID, &book.Title, &book.Author, &book.Year, &book.Genre, &book.ISBN)
-	if err != nil {
+
+	if err := database.DB.First(&book, "id = ?", id).Error; err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	json.NewEncoder(w).Encode(book)
 }
 
@@ -79,10 +71,7 @@ func createBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := strToHash(book.Title + book.Author + book.Year)
-	query := "INSERT INTO books (id, title, author, year, genre, isbn) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id"
-	err = database.DB.QueryRow(query, id, book.Title, book.Author, book.Year, book.Genre, book.ISBN).Scan(&book.ID)
-	if err != nil {
+	if err = database.DB.Create(&book).Error; err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
