@@ -17,7 +17,12 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 func BooksHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/books/" {
-		getBooks(w, r)
+		switch r.Method {
+		case http.MethodGet:
+			getBooks(w, r)
+		case http.MethodPost:
+			createBook(w, r)
+		}
 		return
 	}
 
@@ -30,12 +35,10 @@ func BooksHandler(w http.ResponseWriter, r *http.Request) {
 		updateBook(w, r, id)
 	case http.MethodDelete:
 		deleteBook(w, r, id)
-	case http.MethodPost:
-		createBook(w, r)
 	}
 }
 
-func getBooks(w http.ResponseWriter, r *http.Request) {
+func getBooks(w http.ResponseWriter, _ *http.Request) {
 	var books []model.Book
 
 	if err := database.DB.Find(&books).Error; err != nil {
@@ -47,7 +50,7 @@ func getBooks(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func getBook(w http.ResponseWriter, r *http.Request, id string) {
+func getBook(w http.ResponseWriter, _ *http.Request, id string) {
 	var book model.Book
 	if err := database.DB.First(&book, "id = ?", id).Error; err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -58,6 +61,7 @@ func getBook(w http.ResponseWriter, r *http.Request, id string) {
 }
 
 func createBook(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("receiving book details")
 	var book model.Book
 	err := json.NewDecoder(r.Body).Decode(&book)
 	if err != nil {
@@ -72,6 +76,7 @@ func createBook(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(book)
+	fmt.Println("book created with id: ", book.ID)
 }
 
 func updateBook(w http.ResponseWriter, r *http.Request, id string) {
@@ -104,7 +109,7 @@ func updateBook(w http.ResponseWriter, r *http.Request, id string) {
 	json.NewEncoder(w).Encode(book)
 }
 
-func deleteBook(w http.ResponseWriter, r *http.Request, id string) {
+func deleteBook(w http.ResponseWriter, _ *http.Request, id string) {
 	var book model.Book
 
 	// Find the book by ID first to ensure it exists
