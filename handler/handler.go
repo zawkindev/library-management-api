@@ -15,13 +15,14 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "welcome man!")
 }
 
-func BookHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path == "/" {
+func BooksHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/books/" {
 		getBooks(w, r)
 		return
 	}
 
-	id := r.URL.Path[1:]
+	id := r.URL.Path[len("/books/"):]
+
 	switch r.Method {
 	case http.MethodGet:
 		getBook(w, r, id)
@@ -29,13 +30,6 @@ func BookHandler(w http.ResponseWriter, r *http.Request) {
 		updateBook(w, r, id)
 	case http.MethodDelete:
 		deleteBook(w, r, id)
-	}
-}
-
-func BooksHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		getBooks(w, r)
 	case http.MethodPost:
 		createBook(w, r)
 	}
@@ -55,7 +49,6 @@ func getBooks(w http.ResponseWriter, r *http.Request) {
 
 func getBook(w http.ResponseWriter, r *http.Request, id string) {
 	var book model.Book
-
 	if err := database.DB.First(&book, "id = ?", id).Error; err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
